@@ -1,0 +1,33 @@
+name: Buscar Notícias Go Coffee
+
+on:
+  schedule:
+    - cron: '0 * * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Listar arquivos (debug)
+        run: find . -name "*.py" | head -30
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Instalar dependências
+        run: pip install requests beautifulsoup4 lxml boto3 python-dotenv googlenewsdecoder==0.1.7
+
+      - name: Executar news_fetcher
+        env:
+          AWS_KEY:       ${{ secrets.AWS_KEY }}
+          AWS_SECRET:    ${{ secrets.AWS_SECRET }}
+          SQS_QUEUE_URL: ${{ secrets.SQS_QUEUE_URL }}
+          EMPRESA_BUSCA: "Go Coffee"
+        run: python worker/news_fetcher.py
