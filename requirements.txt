@@ -1,7 +1,11 @@
-boto3
+# NewsSearch — Backend / Pipeline de Dados
+# Nenhuma dependência de fila em nuvem (AWS SQS removido): a fila agora é
+# local, via sqlite3 (biblioteca padrão do Python).
+
 requests
 beautifulsoup4
+lxml
 supabase
 python-dotenv
 googlenewsdecoder==0.1.7
-lxml
+python-dateutil
