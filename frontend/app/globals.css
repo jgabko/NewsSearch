@@ -37,6 +37,23 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* NewsSearch — accent de marca ("sinal"): teal saturado, usado com
+     moderação em navegação ativa, CTAs primários e no destaque de dados. */
+  --brand: oklch(0.55 0.1 195);
+  --brand-foreground: oklch(0.985 0 0);
+
+  /* NewsSearch — tokens semânticos de sentimento. Cores intuitivas:
+     verde = positivo, vermelho = negativo, âmbar = neutro. */
+  --positive: oklch(0.55 0.15 155);
+  --positive-foreground: oklch(0.55 0.15 155);
+  --positive-bg: oklch(0.96 0.04 155);
+  --negative: oklch(0.577 0.245 27.325);
+  --negative-foreground: oklch(0.577 0.245 27.325);
+  --negative-bg: oklch(0.96 0.04 27.325);
+  --neutral-sentiment: oklch(0.6 0.13 80);
+  --neutral-sentiment-foreground: oklch(0.6 0.13 80);
+  --neutral-sentiment-bg: oklch(0.96 0.05 80);
 }
 
 .dark {
@@ -72,6 +89,19 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  --brand: oklch(0.7 0.11 195);
+  --brand-foreground: oklch(0.145 0 0);
+
+  --positive: oklch(0.72 0.17 155);
+  --positive-foreground: oklch(0.72 0.17 155);
+  --positive-bg: oklch(0.27 0.06 155);
+  --negative: oklch(0.704 0.191 22.216);
+  --negative-foreground: oklch(0.704 0.191 22.216);
+  --negative-bg: oklch(0.28 0.07 22);
+  --neutral-sentiment: oklch(0.75 0.14 80);
+  --neutral-sentiment-foreground: oklch(0.75 0.14 80);
+  --neutral-sentiment-bg: oklch(0.28 0.06 80);
 }
 
 @theme inline {
@@ -101,6 +131,17 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+  --color-brand: var(--brand);
+  --color-brand-foreground: var(--brand-foreground);
+  --color-positive: var(--positive);
+  --color-positive-foreground: var(--positive-foreground);
+  --color-positive-bg: var(--positive-bg);
+  --color-negative: var(--negative);
+  --color-negative-foreground: var(--negative-foreground);
+  --color-negative-bg: var(--negative-bg);
+  --color-neutral-sentiment: var(--neutral-sentiment);
+  --color-neutral-sentiment-foreground: var(--neutral-sentiment-foreground);
+  --color-neutral-sentiment-bg: var(--neutral-sentiment-bg);
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);

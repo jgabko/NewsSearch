@@ -7,8 +7,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Tech Pulse - Notícias de Tecnologia',
-  description: 'Acompanhe as notícias de tecnologia em tempo real com o Tech Pulse',
+  title: 'NewsSearch — Monitoramento de Notícias',
+  description: 'Acompanhe o volume e o sentimento das notícias sobre sua empresa em tempo real com o NewsSearch',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -35,7 +35,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en">
+    <html lang="pt-BR">
       <body className="font-sans antialiased">
         {children}
         {process.env.NODE_ENV === 'production' && <Analytics />}
