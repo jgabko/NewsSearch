@@ -95,15 +95,6 @@ python scripts/run_historical_backfill.py --data-inicio 2023-01-01 --data-fim 20
 O worker do Terminal 1 vai processar tudo automaticamente: scraping →
 classificação de sentimento (IA) → gravação no Supabase.
 
-## O que mudou em relação à versão anterior
-
-| Antes                                   | Agora                                          |
-|------------------------------------------|-------------------------------------------------|
-| Fila: AWS SQS (`boto3`)                   | Fila local em SQLite (`local_queue.py`)          |
-| `api/app.py` (Vercel + RabbitMQ, solto)   | Removido — não fazia parte do fluxo principal    |
-| Sem classificação de sentimento           | `ai/sentiment_classifier.py` via OpenRouter      |
-| Sem carga histórica                       | `collector/historical_loader.py`, range configurável |
-| Nome do projeto: `tech-Pulse`             | `NewsSearch` (tabela, variáveis, logs, módulos)  |
 
 ## Variáveis de ambiente
 
