@@ -47,3 +47,52 @@ def salvar_noticia(dados: dict, sentimento: dict) -> None:
         },
         on_conflict="url",
     ).execute()
+
+
+def listar_noticias(empresa: str | None = None, page_size: int = 1000) -> list[dict]:
+    """
+    Retorna todas as notícias da tabela (paginando em blocos de `page_size`
+    para não estourar o limite de linhas por request do Supabase).
+
+    Se `empresa` for informado, filtra por `empresa_alvo` (igualdade exata).
+    Traz `corpo` também, pois o cleaner agora verifica a menção real no
+    conteúdo do artigo (título + corpo), e não só no texto da justificativa
+    que a IA escreveu.
+    """
+    client = get_supabase_client()
+    colunas = "id, titulo, url, corpo, empresa_alvo, sentimento, sentimento_justificativa"
+
+    todas: list[dict] = []
+    inicio = 0
+    while True:
+        query = client.table(_TABLE_NAME).select(colunas)
+        if empresa:
+            query = query.eq("empresa_alvo", empresa)
+        resposta = query.range(inicio, inicio + page_size - 1).execute()
+        pagina = resposta.data or []
+        todas.extend(pagina)
+
+        if len(pagina) < page_size:
+            break
+        inicio += page_size
+
+    return todas
+
+
+def deletar_noticias_por_id(ids: list[int]) -> int:
+    """
+    Apaga da tabela as notícias cujo `id` estiver em `ids`.
+
+    Faz em lotes de 500 ids por requisição (limite prático de filtro `in_`
+    do PostgREST) e retorna o total de ids solicitados para exclusão.
+    """
+    if not ids:
+        return 0
+
+    client = get_supabase_client()
+    lote = 500
+    for i in range(0, len(ids), lote):
+        pedaco = ids[i : i + lote]
+        client.table(_TABLE_NAME).delete().in_("id", pedaco).execute()
+
+    return len(ids)

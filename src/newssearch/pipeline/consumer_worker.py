@@ -5,9 +5,14 @@ Loop contínuo 100% local que substitui o antigo worker baseado em AWS SQS:
 
   1. Consome um job da fila local (SQLite).
   2. Faz o scraping do conteúdo completo do artigo.
-  3. Classifica o sentimento da notícia via OpenRouter.
-  4. Persiste o resultado completo no Supabase.
-  5. Confirma (ack) o job na fila, ou marca falha para retry automático.
+  3. Verifica se o artigo REALMENTE menciona a empresa (título + corpo
+     completo) — filtro rigoroso que evita gastar tokens do OpenRouter
+     classificando notícias que só casaram por uma palavra solta do nome
+     da empresa (ex: "coffee" sozinho para "Go Coffee"). Se não menciona,
+     descarta o job sem chamar a IA e sem salvar no Supabase.
+  4. Classifica o sentimento da notícia via OpenRouter.
+  5. Persiste o resultado completo no Supabase.
+  6. Confirma (ack) o job na fila, ou marca falha para retry automático.
 """
 from __future__ import annotations
 
@@ -16,6 +21,7 @@ import time
 from newssearch.ai.sentiment_classifier import classificar_sentimento
 from newssearch.config import get_settings
 from newssearch.logger import get_logger
+from newssearch.matching.empresa_matcher import mencao_real
 from newssearch.queue.local_queue import LocalQueue, QueueJob
 from newssearch.scraper.article_scraper import scrape
 from newssearch.storage.supabase_repository import salvar_noticia
@@ -26,8 +32,19 @@ logger = get_logger(__name__)
 def processar_job(fila: LocalQueue, job: QueueJob) -> None:
     try:
         dados = scrape(job.payload)
-
         empresa = dados.get("empresa_alvo") or get_settings().empresa_alvo
+
+        texto_completo = f"{dados.get('titulo', '')}\n{dados.get('corpo', '')}"
+        if not mencao_real(texto_completo, empresa):
+            fila.ack(job.id)
+            logger.info(
+                '✗ Descartado (sem menção real a "%s" no artigo): %s | %s',
+                empresa,
+                dados["titulo"][:60],
+                dados["url"][:60],
+            )
+            return
+
         sentimento = classificar_sentimento(empresa=empresa, titulo=dados["titulo"], corpo=dados["corpo"])
 
         salvar_noticia(dados, sentimento)

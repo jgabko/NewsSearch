@@ -85,7 +85,7 @@ export default async function NoticiaPage({ params }: NoticiaPageProps) {
           )}
 
           
-            href={noticia.url}
+            <a href={noticia.url}
             target="_blank"
             rel="noopener noreferrer"
             className="mt-8 inline-flex items-center gap-2 rounded-md bg-brand px-4 py-2.5 text-sm font-medium text-brand-foreground transition-opacity hover:opacity-90"
