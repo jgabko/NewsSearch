@@ -1,0 +1,120 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: NewsSearch — pipeline serverless de coleta e classificação de notícias
+
+Globals:
+  Function:
+    Runtime: python3.12
+    MemorySize: 256
+    Timeout: 90
+    Environment:
+      Variables:
+        SUPABASE_URL: !Ref SupabaseUrl
+        SUPABASE_KEY: !Ref SupabaseKey
+        EMPRESA_ALVO: !Ref EmpresaAlvo
+
+Parameters:
+  SupabaseUrl:
+    Type: String
+  SupabaseKey:
+    Type: String
+    NoEcho: true
+  OpenRouterApiKey:
+    Type: String
+    NoEcho: true
+  OpenRouterModel:
+    Type: String
+    Default: "meta-llama/llama-3.1-8b-instruct:free"
+  EmpresaAlvo:
+    Type: String
+
+Resources:
+
+  DependenciesLayer:
+    Type: AWS::Serverless::LayerVersion
+    Properties:
+      LayerName: newssearch-dependencies
+      ContentUri: layers/dependencies/
+      CompatibleRuntimes: [python3.12]
+    Metadata:
+      BuildMethod: python3.12
+
+  CollectorFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: newssearch-collector
+      CodeUri: lambdas/
+      Handler: collector_handler.handler
+      Layers: [!Ref DependenciesLayer]
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          MAX_ITENS_COLETA: "15"
+      Events:
+        AgendaDiaria:
+          Type: Schedule
+          Properties:
+            Schedule: rate(1 day)
+
+  ScraperFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: newssearch-scraper
+      CodeUri: lambdas/
+      Handler: scraper_handler.handler
+      Layers: [!Ref DependenciesLayer]
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          SCRAPER_LOTE: "10"
+      Events:
+        AgendaFrequente:
+          Type: Schedule
+          Properties:
+            Schedule: rate(10 minutes)
+
+  ClassifierFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: newssearch-classifier
+      CodeUri: lambdas/
+      Handler: classifier_handler.handler
+      Layers: [!Ref DependenciesLayer]
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          OPENROUTER_API_KEY: !Ref OpenRouterApiKey
+          OPENROUTER_MODEL: !Ref OpenRouterModel
+          CLASSIFIER_LOTE: "10"
+      Events:
+        AgendaFrequente:
+          Type: Schedule
+          Properties:
+            Schedule: rate(10 minutes)
+
+  PersistenceFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: newssearch-persistence
+      CodeUri: lambdas/
+      Handler: persistence_handler.handler
+      Layers: [!Ref DependenciesLayer]
+      ReservedConcurrentExecutions: 1
+      Environment:
+        Variables:
+          PERSISTENCE_LOTE: "10"
+      Events:
+        AgendaFrequente:
+          Type: Schedule
+          Properties:
+            Schedule: rate(10 minutes)
+
+Outputs:
+  CollectorFunctionArn:
+    Value: !GetAtt CollectorFunction.Arn
+  ScraperFunctionArn:
+    Value: !GetAtt ScraperFunction.Arn
+  ClassifierFunctionArn:
+    Value: !GetAtt ClassifierFunction.Arn
+  PersistenceFunctionArn:
+    Value: !GetAtt PersistenceFunction.Arn
