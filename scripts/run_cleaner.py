@@ -37,7 +37,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from newssearch.logger import get_logger  # noqa: E402
-from newssearch.matching.empresa_matcher import mencao_real  # noqa: E402
+from newssearch.matching.empresa_matching import mencao_real  # noqa: E402
 from newssearch.storage.supabase_repository import (  # noqa: E402
     deletar_noticias_por_id,
     listar_noticias,

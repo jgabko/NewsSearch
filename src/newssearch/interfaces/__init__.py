@@ -1,0 +1,6 @@
+from newssearch.interfaces.models import NoticiaBruta, ResultadoClassificacao
+from newssearch.interfaces.INewsSource import INewsSource
+from newssearch.interfaces.IScraper import IScraper
+from newssearch.interfaces.ISentimentClassifier import ISentimentClassifier
+from newssearch.interfaces.IQueueRepository import IQueueRepository
+from newssearch.interfaces.IArticleRepository import IArticleRepository
