@@ -9,3 +9,4 @@ supabase
 python-dotenv
 googlenewsdecoder==0.1.7
 python-dateutil
+feedparser
