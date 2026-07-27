@@ -1,0 +1,43 @@
+name: Coleta e Processamento de Notícias
+
+on:
+  schedule:
+    - cron: '0 */6 * * *'   # a cada 6 horas
+  workflow_dispatch: {}     # permite rodar manualmente pela aba Actions
+
+jobs:
+  fetch-and-process:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    env:
+      SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+      SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+      OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+      OPENROUTER_MODEL: ${{ vars.OPENROUTER_MODEL || 'meta-llama/llama-3.1-8b-instruct:free' }}
+      EMPRESA_ALVO: ${{ vars.EMPRESA_ALVO || 'Go Coffee' }}
+      NEWSSEARCH_MAX_ITEMS_POR_BUSCA: ${{ vars.NEWSSEARCH_MAX_ITEMS_POR_BUSCA || '20' }}
+      NEWSSEARCH_QUEUE_DB_PATH: data/newssearch_queue.db
+      NEWSSEARCH_LOG_LEVEL: INFO
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Instalar dependências
+        run: pip install -r requirements.txt
+
+      - name: Coletar notícias recentes (producer)
+        run: python scripts/run_collect.py
+
+      - name: Processar fila — scraping + IA + Supabase (worker em modo drain)
+        run: >
+          python scripts/run_worker.py
+          --drain
+          --max-runtime-seconds 3000
