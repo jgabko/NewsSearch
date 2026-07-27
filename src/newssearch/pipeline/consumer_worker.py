@@ -61,7 +61,24 @@ def processar_job(fila: LocalQueue, job: QueueJob) -> None:
         fila.fail(job.id, str(exc))
 
 
-def run_worker(poll_interval: float | None = None) -> None:
+def run_worker(
+    poll_interval: float | None = None,
+    drain: bool = False,
+    max_runtime_seconds: float | None = None,
+) -> None:
+    """
+    Executa o worker.
+
+    Args:
+        poll_interval: intervalo (segundos) entre tentativas quando a fila
+            está vazia, no modo contínuo. Ignorado no modo drain.
+        drain: se True, processa jobs até a fila esvaziar e ENCERRA (em vez
+            de ficar em loop infinito). Modo usado em execuções via
+            GitHub Actions / CI, onde não há um processo de longa duração.
+        max_runtime_seconds: teto de segurança de tempo total de execução
+            (em qualquer modo). Útil em CI para nunca estourar o limite do
+            job, mesmo que a fila tenha muitos itens.
+    """
     settings = get_settings()
     poll_interval = poll_interval or settings.worker_poll_interval
 
@@ -70,18 +87,37 @@ def run_worker(poll_interval: float | None = None) -> None:
     if recuperados:
         logger.info("Recuperados %d jobs presos de uma execução anterior.", recuperados)
 
-    logger.info("NewsSearch worker iniciado. Aguardando jobs na fila local...")
+    modo = "drenagem (encerra ao esvaziar a fila)" if drain else "contínuo (loop infinito)"
+    logger.info("NewsSearch worker iniciado em modo %s...", modo)
+
+    inicio = time.monotonic()
+    processados = 0
 
     try:
         while True:
+            if max_runtime_seconds is not None and (time.monotonic() - inicio) > max_runtime_seconds:
+                logger.info(
+                    "Tempo máximo de execução atingido (%.0fs). %d job(s) processado(s). Encerrando.",
+                    max_runtime_seconds,
+                    processados,
+                )
+                break
+
             job = fila.dequeue()
             if job is None:
+                if drain:
+                    logger.info(
+                        "Fila vazia. %d job(s) processado(s). Encerrando (modo drenagem).",
+                        processados,
+                    )
+                    break
                 time.sleep(poll_interval)
                 continue
+
             processar_job(fila, job)
+            processados += 1
     except KeyboardInterrupt:
         logger.info("Worker encerrado pelo usuário (Ctrl+C).")
-
 
 if __name__ == "__main__":
     run_worker()
